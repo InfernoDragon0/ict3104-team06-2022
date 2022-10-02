@@ -1,0 +1,3 @@
+[submodule "Toyota_Smarthome"]
+	path = Toyota_Smarthome
+	url = https://github.com/dairui01/Toyota_Smarthome.git
