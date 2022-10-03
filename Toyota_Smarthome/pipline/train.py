@@ -15,90 +15,90 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-mode', type=str, help='rgb or flow (or joint for eval)')
-parser.add_argument('-train', type=str2bool, default='True', help='train or eval')
-parser.add_argument('-comp_info', type=str)
-parser.add_argument('-rgb_model_file', type=str)
-parser.add_argument('-flow_model_file', type=str)
-parser.add_argument('-gpu', type=str, default='4')
-parser.add_argument('-dataset', type=str, default='charades')
-parser.add_argument('-rgb_root', type=str, default='no_root')
-parser.add_argument('-flow_root', type=str, default='no_root')
-parser.add_argument('-type', type=str, default='original')
-parser.add_argument('-lr', type=str, default='0.1')
-parser.add_argument('-epoch', type=str, default='50')
-parser.add_argument('-model', type=str, default='')
-parser.add_argument('-APtype', type=str, default='wap')
-parser.add_argument('-randomseed', type=str, default='False')
-parser.add_argument('-load_model', type=str, default='False')
-parser.add_argument('-num_channel', type=str, default='False')
-parser.add_argument('-batch_size', type=str, default='False')
-parser.add_argument('-kernelsize', type=str, default='False')
-parser.add_argument('-feat', type=str, default='False')
-parser.add_argument('-split_setting', type=str, default='CS')
-args = parser.parse_args()
+# parser = argparse.ArgumentParser()
+# parser.add_argument('-mode', type=str, help='rgb or flow (or joint for eval)')
+# parser.add_argument('-train', type=str2bool, default='True', help='train or eval')
+# parser.add_argument('-comp_info', type=str)
+# parser.add_argument('-rgb_model_file', type=str)
+# parser.add_argument('-flow_model_file', type=str)
+# parser.add_argument('-gpu', type=str, default='4')
+# parser.add_argument('-dataset', type=str, default='charades')
+# parser.add_argument('-rgb_root', type=str, default='no_root')
+# parser.add_argument('-flow_root', type=str, default='no_root')
+# parser.add_argument('-type', type=str, default='original')
+# parser.add_argument('-lr', type=str, default='0.1')
+# parser.add_argument('-epoch', type=str, default='50')
+# parser.add_argument('-model', type=str, default='')
+# parser.add_argument('-APtype', type=str, default='wap')
+# parser.add_argument('-randomseed', type=str, default='False')
+# parser.add_argument('-load_model', type=str, default='False')
+# parser.add_argument('-num_channel', type=str, default='False')
+# parser.add_argument('-batch_size', type=str, default='False')
+# parser.add_argument('-kernelsize', type=str, default='False')
+# parser.add_argument('-feat', type=str, default='False')
+# parser.add_argument('-split_setting', type=str, default='CS')
+# args = parser.parse_args()
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-import numpy as np
-import random
+# import torch
+# import torch.nn as nn
+# import torch.nn.functional as F
+# import torch.optim as optim
+# import numpy as np
+# import random
 
-# set random seed
-if args.randomseed=="False":
-    SEED = 0
-elif args.randomseed=="True":
-    SEED = random.randint(1, 100000)
-else:
-    SEED = int(args.randomseed)
+# # set random seed
+# if args.randomseed=="False":
+#     SEED = 0
+# elif args.randomseed=="True":
+#     SEED = random.randint(1, 100000)
+# else:
+#     SEED = int(args.randomseed)
 
-torch.manual_seed(SEED)
-torch.cuda.manual_seed(SEED)
-torch.manual_seed(SEED)
-np.random.seed(SEED)
-torch.cuda.manual_seed_all(SEED)
-random.seed(SEED)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-print('Random_SEED!!!:', SEED)
+# torch.manual_seed(SEED)
+# torch.cuda.manual_seed(SEED)
+# torch.manual_seed(SEED)
+# np.random.seed(SEED)
+# torch.cuda.manual_seed_all(SEED)
+# random.seed(SEED)
+# torch.backends.cudnn.deterministic = True
+# torch.backends.cudnn.benchmark = False
+# print('Random_SEED!!!:', SEED)
 
-from torch.optim import lr_scheduler
-from torch.autograd import Variable
+# from torch.optim import lr_scheduler
+# from torch.autograd import Variable
 
-import json
+# import json
 
-import pickle
-import math
-
-
-
-if str(args.APtype) == 'map':
-    from apmeter import APMeter
+# import pickle
+# import math
 
 
-batch_size = int(args.batch_size)
 
-if args.dataset == 'TSU':
-    split_setting=str(args.split_setting)
+# if str(args.APtype) == 'map':
+#     from apmeter import APMeter
+
+
+# batch_size = int(args.batch_size)
+
+# if args.dataset == 'TSU':
+#     split_setting=str(args.split_setting)
     
-    from smarthome_i3d_per_video import TSU as Dataset
-    from smarthome_i3d_per_video import TSU_collate_fn as collate_fn
-    classes=51
+#     from smarthome_i3d_per_video import TSU as Dataset
+#     from smarthome_i3d_per_video import TSU_collate_fn as collate_fn
+#     classes=51
     
-    if split_setting =='CS':
-        train_split = './data/smarthome_CS_51.json'
-        test_split = './data/smarthome_CS_51.json'
+#     if split_setting =='CS':
+#         train_split = './data/smarthome_CS_51.json'
+#         test_split = './data/smarthome_CS_51.json'
         
-    elif split_setting =='CV':
-        train_split = './data/smarthome_CV_51.json'
-        test_split = './data/smarthome_CV_51.json'
-    import os
-        
-    rgb_root = '/data/stars/user/rdai/smarthome_untrimmed/features/i3d_16frames_64000_SSD'
-    skeleton_root='/skeleton/feat/Path/' # 
+#     elif split_setting =='CV':
+#         train_split = './data/smarthome_CV_51.json'
+#         test_split = './data/smarthome_CV_51.json'
+    
+#     rgb_root = '/data/stars/user/rdai/smarthome_untrimmed/features/i3d_16frames_64000_SSD'
+#     skeleton_root='/skeleton/feat/Path/' # 
 
+        
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
@@ -279,8 +279,145 @@ def val_step(model, gpu, dataloader, epoch):
 
     return full_probs, epoch_loss, val_map
 
+# if __name__ == '__main__':
+#     print(str(args.model))
+#     print('batch_size:', batch_size)
+#     print('cuda_avail', torch.cuda.is_available())
 
-if __name__ == '__main__':
+#     if args.mode == 'flow':
+#         print('flow mode', flow_root)
+#         dataloaders, datasets = load_data(train_split, test_split, flow_root)
+#     elif args.mode == 'skeleton':
+#         print('Pose mode', skeleton_root)
+#         dataloaders, datasets = load_data(train_split, test_split, skeleton_root)
+#     elif args.mode == 'rgb':
+#         print('RGB mode', rgb_root)
+#         dataloaders, datasets = load_data(train_split, test_split, rgb_root)
+
+#     if args.train:
+#         num_channel = args.num_channel
+#         if args.mode == 'skeleton':
+#             input_channnel = 256
+#         else:
+#             input_channnel = 1024
+
+#         num_classes = classes
+#         mid_channel=int(args.num_channel)
+
+
+#         if args.model=="PDAN":
+#             print("you are processing PDAN")
+#             from models import PDAN as Net
+#             model = Net(num_stages=1, num_layers=5, num_f_maps=mid_channel, dim=input_channnel, num_classes=classes)
+
+
+#         model=torch.nn.DataParallel(model)
+
+#         if args.load_model!= "False":
+#             # entire model
+#             model = torch.load(args.load_model)
+#             # weight
+#             # model.load_state_dict(torch.load(str(args.load_model)))
+#             print("loaded",args.load_model)
+
+#         pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+#         print('pytorch_total_params', pytorch_total_params)
+#         print('num_channel:', num_channel, 'input_channnel:', input_channnel,'num_classes:', num_classes)
+#         model.cuda()
+
+#         criterion = nn.NLLLoss(reduce=False)
+#         lr = float(args.lr)
+#         print(lr)
+#         optimizer = optim.Adam(model.parameters(), lr=lr)
+#         lr_sched = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=8, verbose=True)
+#         run([(model, 0, dataloaders, optimizer, lr_sched, args.comp_info)], criterion, num_epochs=int(args.epoch))
+
+
+def main(raw_args = None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-mode', type=str, help='rgb or flow (or joint for eval)')
+    parser.add_argument('-train', type=str2bool, default='True', help='train or eval')
+    parser.add_argument('-comp_info', type=str)
+    parser.add_argument('-rgb_model_file', type=str)
+    parser.add_argument('-flow_model_file', type=str)
+    parser.add_argument('-gpu', type=str, default='4')
+    parser.add_argument('-dataset', type=str, default='charades')
+    parser.add_argument('-rgb_root', type=str, default='no_root')
+    parser.add_argument('-flow_root', type=str, default='no_root')
+    parser.add_argument('-type', type=str, default='original')
+    parser.add_argument('-lr', type=str, default='0.1')
+    parser.add_argument('-epoch', type=str, default='50')
+    parser.add_argument('-model', type=str, default='')
+    parser.add_argument('-APtype', type=str, default='wap')
+    parser.add_argument('-randomseed', type=str, default='False')
+    parser.add_argument('-load_model', type=str, default='False')
+    parser.add_argument('-num_channel', type=str, default='False')
+    parser.add_argument('-batch_size', type=str, default='False')
+    parser.add_argument('-kernelsize', type=str, default='False')
+    parser.add_argument('-feat', type=str, default='False')
+    parser.add_argument('-split_setting', type=str, default='CS')
+    args = parser.parse_args()
+
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+    import torch.optim as optim
+    import numpy as np
+    import random
+
+    # set random seed
+    if args.randomseed=="False":
+        SEED = 0
+    elif args.randomseed=="True":
+        SEED = random.randint(1, 100000)
+    else:
+        SEED = int(args.randomseed)
+
+    torch.manual_seed(SEED)
+    torch.cuda.manual_seed(SEED)
+    torch.manual_seed(SEED)
+    np.random.seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+    random.seed(SEED)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    print('Random_SEED!!!:', SEED)
+
+    from torch.optim import lr_scheduler
+    from torch.autograd import Variable
+
+    import json
+
+    import pickle
+    import math
+
+
+
+    if str(args.APtype) == 'map':
+        from apmeter import APMeter
+
+
+    batch_size = int(args.batch_size)
+
+    if args.dataset == 'TSU':
+        split_setting=str(args.split_setting)
+
+        from smarthome_i3d_per_video import TSU as Dataset
+        from smarthome_i3d_per_video import TSU_collate_fn as collate_fn
+        classes=51
+
+        if split_setting =='CS':
+            train_split = './data/smarthome_CS_51.json'
+            test_split = './data/smarthome_CS_51.json'
+
+        elif split_setting =='CV':
+            train_split = './data/smarthome_CV_51.json'
+            test_split = './data/smarthome_CV_51.json'
+        import os
+
+        rgb_root = '/data/stars/user/rdai/smarthome_untrimmed/features/i3d_16frames_64000_SSD'
+        skeleton_root='/skeleton/feat/Path/' # 
+
     print(str(args.model))
     print('batch_size:', batch_size)
     print('cuda_avail', torch.cuda.is_available())
